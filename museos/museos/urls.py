@@ -14,7 +14,10 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.contrib.auth.views import logout, login
 
 urlpatterns = [
+    url(r'^logout', logout),
+    url(r'^login', login),
     url(r'^admin/', include(admin.site.urls)),
 ]

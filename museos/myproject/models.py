@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone.now
+from django.utils import timezone
 # Create your models here.
 
 class Museo(models.Model):
@@ -15,8 +15,8 @@ class Museo(models.Model):
     def __str__(self):
         return self.nombre
 
-class Usuario(models.model):
-    nombre = models.models.OneToOneField(User)
+class Usuario(models.Model):
+    nombre = models.OneToOneField(User)
     titulo = models.CharField(max_length=256)
     letracolor = models.CharField(max_length=256)
     tamaño = models.CharField(max_length=256)
@@ -24,12 +24,12 @@ class Usuario(models.model):
     def __str__(self):
         return self.nombre
 
-class Comentario(models.model):
+class Comentario(models.Model):
     texto = models.TextField()
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
 
-class Seleccion():
+class Seleccion(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
     fecha = models.DateTimeField(default=timezone.now)
