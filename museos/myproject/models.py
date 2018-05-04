@@ -10,8 +10,9 @@ class Museo(models.Model):
     descripcion = models.TextField()
     enlace = models.TextField()
     email = models.TextField()
-    telefono = models.IntegerField()
-    accesibilidad = models.IntegerField()
+    fax = models.TextField()
+    telefono = models.TextField()
+    accesibilidad = models.TextField()
     def __str__(self):
         return self.nombre
 
@@ -28,8 +29,12 @@ class Comentario(models.Model):
     texto = models.TextField()
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
+    def __str__(self):
+        return self.usuario
 
 class Seleccion(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
     fecha = models.DateTimeField(default=timezone.now)
+    def __str__(self):
+        return self.usuario
