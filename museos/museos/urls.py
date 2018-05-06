@@ -17,8 +17,9 @@ from django.contrib import admin
 from django.contrib.auth.views import logout, login
 
 urlpatterns = [
-#    url(r'^museos/$', 'myproject.views.py.museo'),
-    url(r'^update/','myproject.views.update'),
+    url(r'^$','myproject.views.barra'),
+    url(r'^usuario/(\d+)$','myproject.views.usuario'),
+    url(r'^update/$','myproject.views.update'),
     url(r'^logout', logout),
     url(r'^login', login),
     url(r'^admin/', include(admin.site.urls)),

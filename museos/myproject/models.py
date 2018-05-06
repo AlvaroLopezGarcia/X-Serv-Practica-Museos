@@ -23,18 +23,18 @@ class Usuario(models.Model):
     tamaño = models.CharField(max_length=256)
     fondocolor = models.CharField(max_length=256)
     def __str__(self):
-        return self.nombre
+        return self.nombre.username
 
 class Comentario(models.Model):
     texto = models.TextField()
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
     def __str__(self):
-        return self.usuario
+        return self.museo.nombre
 
 class Seleccion(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
     fecha = models.DateTimeField(default=timezone.now)
     def __str__(self):
-        return self.usuario
+        return self.usuario.nombre.username
