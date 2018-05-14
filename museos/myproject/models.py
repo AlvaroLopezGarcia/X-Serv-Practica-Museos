@@ -29,6 +29,7 @@ class Comentario(models.Model):
     texto = models.TextField()
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(Usuario)
+    fecha = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.museo.nombre
 

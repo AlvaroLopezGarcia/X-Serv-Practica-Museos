@@ -24,13 +24,16 @@ FORMULARIO_ACCESIBILIDAD = """
 </form>
 """
 
+
 FORMULARIO_COMENTARIO = """
-    <form action= "/" Method= "POST">
+    <form action= "" Method= "POST">
     Comentario:<br>
-    <input type="text" name="name" placeholder= "comenta"><br>
+    <input type="text" name="comentario" placeholder= "comenta"><br>
     <input type="submit" value="Enviar">
 </form>
 """
+
+
 FORMULARIO_USUARIO = """
     <form action= "" Method= "POST">
   <p>
@@ -47,8 +50,6 @@ FORMULARIO_USUARIO = """
 """
 
 museos = {}
-#lista = {}
-
 
 def update(request):
     Museo.objects.all().delete()
@@ -59,9 +60,56 @@ def update(request):
     return HttpResponse('Se han actualizado los museos')
 
 
-#@csrf_exempt
-#def museo(request,numero):
-#    if
+def cargar_museos(lista):
+    museos = Museo.objects.all()
+    for museo in museos:
+        lista[museo.nombre]= 0
+
+def cargar_comentarios(lista):
+    comentarios = Comentario.objects.all()
+    claves=lista.keys()
+    for comentario in comentarios:
+        for clave in claves:
+            if clave==comentario.museo.nombre:
+                lista[comentario.museo.nombre]+= 1
+                break
+
+def cargar_accesibles(lista_comentados):
+    cont=0
+    museos = Museo.objects.all()
+    respuesta="<ul>"
+    for element in lista_comentados:
+        if element[1] != 0:
+            if museos.get(nombre= element[0]).accesibilidad =='1':
+                respuesta += '<li><a href= "' + museos.get(nombre= element[0]).enlace
+                respuesta += '">' + museos.get(nombre= element[0]).nombre + "</a><ul>"
+                respuesta += '<li type= "circle">Barrio: ' + museos.get(nombre= element[0]).barrio
+                respuesta += '; Distrito: '+ museos.get(nombre= element[0]).distrito
+                respuesta += '<li type= "circle"><a href= "/museos/'
+                respuesta += str(museos.get(nombre= element[0]).id) +'">' + "Más información</a></ul>"
+            if(cont==4):
+                break
+            cont+=1
+    return respuesta
+
+def cargar_comentados(lista_comentados):
+    cont=0
+    museos = Museo.objects.all()
+    respuesta="<ul>"
+    for element in lista_comentados:
+        if element[1] != 0:
+            respuesta += '<li><a href= "' + museos.get(nombre= element[0]).enlace
+            respuesta += '">' + museos.get(nombre= element[0]).nombre + "</a><ul>"
+            respuesta += '<li type= "circle">Barrio: ' + museos.get(nombre= element[0]).barrio
+            respuesta += '; Distrito: '+ museos.get(nombre= element[0]).distrito
+            respuesta += '<li type= "circle"><a href= "/museos/' + str(museos.get(nombre= element[0]).id)
+            respuesta += '">' + "Más información</a></ul>"
+            if(cont==4):
+                break
+            cont+=1
+        else:
+            break;
+    return respuesta
 
 @csrf_exempt
 def museos(request):
@@ -91,21 +139,69 @@ def museos(request):
     return HttpResponse (respuesta)
 
 @csrf_exempt
+def museo(request,numero):
+    if request.method == "POST":
+        comentario = Comentario(texto=request.POST['comentario'], museo=Museo.objects.get(id=int(numero)), usuario=Usuario.objects.get(nombre=request.user))
+        comentario.save()
+    museo = Museo.objects.get(id=numero).nombre
+    respuesta = "Nombre: " + Museo.objects.get(id=numero).nombre + "</br>"
+    respuesta += "Distrito: " + Museo.objects.get(id=numero).distrito+ "</br>"
+    respuesta += "Barrio: " + Museo.objects.get(id=numero).barrio+ "</br>"
+    respuesta += "Descripcion: " + Museo.objects.get(id=numero).descripcion+ "</br>"
+    respuesta += "Enlace: " + Museo.objects.get(id=numero).enlace+ "</br>"
+    respuesta += "Email: " + Museo.objects.get(id=numero).email+ "</br>"
+    respuesta += "Fax: " + Museo.objects.get(id=numero).fax+ "</br>"
+    respuesta += "Telefono: " + Museo.objects.get(id=numero).telefono+ "</br>"
+    respuesta += "Accesibilidad: " + Museo.objects.get(id=numero).accesibilidad+ "</br>"
+    respuesta += "Comentarios:</br>"
+    comentarios = Comentario.objects.filter(museo_id=numero)
+    for comentario in comentarios:
+        respuesta += "<ul><li>Usuario: " + str(comentario.usuario)+ " Fecha: " + str(comentario.fecha)
+        respuesta += '<li type= "circle">' + comentario.texto + "</ul>"
+
+    if request.user.is_authenticated():
+        respuesta += FORMULARIO_COMENTARIO
+
+    return HttpResponse (respuesta)
+
+def listar_museos(page,seleccionados,numero,usuario):
+    respuesta = "<ul>"
+    cont=0
+    if str(page) == "None":
+        page = '0'
+        ultimo = 4
+        primero = int(page)
+    else:
+        print("Entro")
+        primero = int(page)*5
+        ultimo = primero + 5 - 1
+
+    for element in seleccionados:
+        if (cont >= primero):
+            if (cont > ultimo):
+                cont = int(page)+1
+                respuesta+= '<a href= "/usuario/' +  str(usuario.id) + "?page="+ str(cont) + '">' + "Más</a>"
+                break
+            respuesta += '<li><a href= "' + element.museo.enlace +'">' + element.museo.nombre + "</a><ul>"
+            respuesta += '<li type= "circle">Barrio: ' + element.museo.barrio + '; Distrito: '+ element.museo.distrito
+            respuesta += '<li type= "circle"><a href= "/museos/' + str(element.museo.id) +'">' + "Más información</a></ul>"
+        cont+=1
+    if (int(page) > 0):
+        cont = int(page) -1
+        respuesta += '</br><a href= "/usuario/' +  str(usuario.id) + "?page="+ str(cont) + '">' + "Página anterior</a>"
+    return respuesta
+
+@csrf_exempt
 def usuario(request, numero):
-    seleccionados =Seleccion.objects.filter(usuario_id=numero)
+    respuesta = ""
+    seleccionados = Seleccion.objects.filter(usuario_id=numero)
     try:
         usuario = Usuario.objects.get(id=str(numero))
     except Usuario.DoesNotExist:
         return HttpResponseNotFound('<h1>' + numero + ' not found</h1>')
-    respuesta = "<ul>"
-    cont=0
-    for element in seleccionados:
-        respuesta += '<li><a href= "' + element.museo.enlace +'">' + element.museo.nombre + "</a><ul>"
-        respuesta += '<li type= "circle">Barrio: ' + element.museo.barrio + '; Distrito: '+ element.museo.distrito
-        respuesta += '<li type= "circle"><a href= "/museos/' + str(numero) +'">' + "Más información</a></ul>"
-        if(cont==4):
-            respuesta+= '</br></br></br></br></br>'
 
+    page = request.GET.get('page')
+    respuesta += listar_museos(page,seleccionados,numero,usuario)
     if request.user.is_authenticated():
         logged = 'Logged in as ' + request.user.username + '. <a href="/logout">Logout</a></br>'
         if request.user.username == str(usuario.nombre):
@@ -116,7 +212,6 @@ def usuario(request, numero):
         logged = 'Not logged in. <a href="/login">Login</a>'
         respuesta += '</ul>'+ logged
     if request.method == "POST":
-        print(request.body)
         opcion= request.POST['opcion']
         valor = request.POST['valor']
         if opcion == 'Titulo':
@@ -131,59 +226,29 @@ def usuario(request, numero):
 
 @csrf_exempt
 def barra(request):
+    respuesta=""
     lista_comentados = []
     lista = {}
-
     comentarios = Comentario.objects.all()
     usuarios = Usuario.objects.all()
-    museos = Museo.objects.all()
-    for museo in museos:
-        lista[museo.nombre]= 0
-    
-    
-    claves=lista.keys()
-    for comentario in comentarios:
-        for clave in claves:
-            if clave==comentario.museo.nombre:
-                lista[comentario.museo.nombre]+= 1
-                break
+    cargar_museos(lista)
+    cargar_comentarios(lista)
     lista_comentados=sorted(lista.items(), key=operator.itemgetter(1))
     lista_comentados.reverse()
-    cont=0
-    respuesta="<ul>"
     if request.method == "POST":
-        for element in lista_comentados:
-            if element[1] != 0:
-                if museos.get(nombre= element[0]).accesibilidad =='1':
-                    respuesta += '<li><a href= "' + museos.get(nombre= element[0]).enlace 
-                    respuesta += '">' + museos.get(nombre= element[0]).nombre + "</a><ul>"
-                    respuesta += '<li type= "circle">Barrio: ' + museos.get(nombre= element[0]).barrio
-                    respuesta += '; Distrito: '+ museos.get(nombre= element[0]).distrito
-                    respuesta += '<li type= "circle"><a href= "/museos/'
-                    respuesta += str(museos.get(nombre= element[0]).id) +'">' + "Más información</a></ul>"
-            if(cont==4):
-                break
-            cont+=1
+        respuesta += cargar_accesibles(lista_comentados)
     else:
-        for element in lista_comentados:
-            if element[1] != 0:
-                respuesta += '<li><a href= "' + museos.get(nombre= element[0]).enlace
-                respuesta += '">' + museos.get(nombre= element[0]).nombre + "</a><ul>"
-                respuesta += '<li type= "circle">Barrio: ' + museos.get(nombre= element[0]).barrio
-                respuesta += '; Distrito: '+ museos.get(nombre= element[0]).distrito
-                respuesta += '<li type= "circle"><a href= "/museos/' + str(museos.get(nombre= element[0]).id)
-                respuesta += '">' + "Más información</a></ul>"
-                if(cont==4):
-                    break
-                cont+=1
-            else:
-                break;
+        respuesta += cargar_comentados(lista_comentados)
+    respuesta += "</ul>"
 #    print (lista_comentados)
     respuesta += '</br></br></br></br></br>'
     for usuario in usuarios:
-        respuesta += '<li><a href= "/usuario/' + str(usuario.id) +'">' + str(usuario.nombre)+"</a><ul>"
+        respuesta += '<ul><li type= "circle">Usuario: ' + str(usuario.nombre) +". Título: "
+        if str(usuario.titulo)!= "":
+            respuesta += '<a href= "/usuario/' + str(usuario.id) +'">' + str(usuario.titulo)+"</a></ul>"
+        else:
+            respuesta += '<a href= "/usuario/' + str(usuario.id) +'">'+"Página de "+str(usuario.nombre)+"</a></ul>"
 #Te falta configurar lo del titulo
-        respuesta += '<li type= "circle">Titulo: ' + str(usuario.titulo) +"</ul>"
 
     if request.method == "POST":
         respuesta += '</ul>'+FORMULARIO
@@ -198,4 +263,3 @@ def barra(request):
         respuesta += logged
 
     return HttpResponse (respuesta)
-    

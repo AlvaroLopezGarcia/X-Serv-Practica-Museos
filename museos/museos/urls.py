@@ -19,7 +19,7 @@ from django.contrib.auth.views import logout, login
 urlpatterns = [
     url(r'^$','myproject.views.barra'),
     url(r'^museos/$','myproject.views.museos'),
-#    url(r'^museos/(\d+)$','myproject.views.museo'),
+    url(r'^museos/(\d+)$','myproject.views.museo'),
     url(r'^usuario/(\d+)$','myproject.views.usuario'),
     url(r'^update/$','myproject.views.update'),
     url(r'^logout', logout),
