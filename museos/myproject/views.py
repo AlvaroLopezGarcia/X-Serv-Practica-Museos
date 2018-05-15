@@ -117,6 +117,7 @@ def museos(request):
     existe = False
     museos = Museo.objects.all()
     FORMULARIO_DISTRITO = '<form action= "" Method= "POST"><p>Opciones:<select name="opcion">'
+    FORMULARIO_LIKE = '<form action= "" Method= "GET"><p>Me gusta: <select name="like">'
     for museo in museos:
         lista[museo.distrito]= 0
 
@@ -131,11 +132,23 @@ def museos(request):
         for museo in museos:
             if museo.distrito==opcion:
                 respuesta += '<li><a href= "' + museo.enlace +'">' + museo.nombre + "</a></ul><ul>"
+                FORMULARIO_LIKE+="<option>"+ museo.nombre + "</option>"
     else:
         for museo in museos:
             respuesta += '<li><a href= "' + museo.enlace +'">' + museo.nombre + "</a></ul><ul>"
+            FORMULARIO_LIKE+="<option>"+ museo.nombre + "</option>"
 
+    FORMULARIO_LIKE+='</select></p><p><input type="submit" value="Enviar datos"></p></form>'
     respuesta = FORMULARIO_DISTRITO + respuesta
+    if request.user.is_authenticated():
+        nombre = request.GET.get('like')
+        if str(nombre)!='None':
+            museo= Museo.objects.get(nombre=nombre)
+            usuario=Usuario.objects.get(nombre=request.user)
+            seleccion = Seleccion(museo=museo, usuario=usuario)
+            seleccion.save()
+
+        respuesta += FORMULARIO_LIKE
     return HttpResponse (respuesta)
 
 @csrf_exempt
@@ -143,16 +156,16 @@ def museo(request,numero):
     if request.method == "POST":
         comentario = Comentario(texto=request.POST['comentario'], museo=Museo.objects.get(id=int(numero)), usuario=Usuario.objects.get(nombre=request.user))
         comentario.save()
-    museo = Museo.objects.get(id=numero).nombre
-    respuesta = "Nombre: " + Museo.objects.get(id=numero).nombre + "</br>"
-    respuesta += "Distrito: " + Museo.objects.get(id=numero).distrito+ "</br>"
-    respuesta += "Barrio: " + Museo.objects.get(id=numero).barrio+ "</br>"
-    respuesta += "Descripcion: " + Museo.objects.get(id=numero).descripcion+ "</br>"
-    respuesta += "Enlace: " + Museo.objects.get(id=numero).enlace+ "</br>"
-    respuesta += "Email: " + Museo.objects.get(id=numero).email+ "</br>"
-    respuesta += "Fax: " + Museo.objects.get(id=numero).fax+ "</br>"
-    respuesta += "Telefono: " + Museo.objects.get(id=numero).telefono+ "</br>"
-    respuesta += "Accesibilidad: " + Museo.objects.get(id=numero).accesibilidad+ "</br>"
+    museo = Museo.objects.get(id=numero)
+    respuesta = "Nombre: " + museo.nombre + "</br>"
+    respuesta += "Distrito: " + museo.distrito+ "</br>"
+    respuesta += "Barrio: " + museo.barrio+ "</br>"
+    respuesta += "Descripcion: " + museo.descripcion+ "</br>"
+    respuesta += "Enlace: " + museo.enlace+ "</br>"
+    respuesta += "Email: " + museo.email+ "</br>"
+    respuesta += "Fax: " + museo.fax+ "</br>"
+    respuesta += "Telefono: " + museo.telefono+ "</br>"
+    respuesta += "Accesibilidad: " + museo.accesibilidad+ "</br>"
     respuesta += "Comentarios:</br>"
     comentarios = Comentario.objects.filter(museo_id=numero)
     for comentario in comentarios:
@@ -172,7 +185,6 @@ def listar_museos(page,seleccionados,numero,usuario):
         ultimo = 4
         primero = int(page)
     else:
-        print("Entro")
         primero = int(page)*5
         ultimo = primero + 5 - 1
 
