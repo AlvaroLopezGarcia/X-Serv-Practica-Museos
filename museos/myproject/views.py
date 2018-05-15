@@ -49,7 +49,7 @@ FORMULARIO_USUARIO = """
 </form>
 """
 
-museos = {}
+#museos = {}
 
 def update(request):
     Museo.objects.all().delete()
@@ -111,6 +111,15 @@ def cargar_comentados(lista_comentados):
             break;
     return respuesta
 
+def add_seleccion(request):
+    if request.user.is_authenticated():
+        nombre = request.GET.get('like')
+        if str(nombre)!='None':
+            museo= Museo.objects.get(nombre=nombre)
+            usuario=Usuario.objects.get(nombre=request.user)
+            seleccion = Seleccion(museo=museo, usuario=usuario)
+            seleccion.save()
+
 @csrf_exempt
 def museos(request):
     lista = {}
@@ -140,15 +149,8 @@ def museos(request):
 
     FORMULARIO_LIKE+='</select></p><p><input type="submit" value="Enviar datos"></p></form>'
     respuesta = FORMULARIO_DISTRITO + respuesta
-    if request.user.is_authenticated():
-        nombre = request.GET.get('like')
-        if str(nombre)!='None':
-            museo= Museo.objects.get(nombre=nombre)
-            usuario=Usuario.objects.get(nombre=request.user)
-            seleccion = Seleccion(museo=museo, usuario=usuario)
-            seleccion.save()
-
-        respuesta += FORMULARIO_LIKE
+    add_seleccion(request)   
+    respuesta += FORMULARIO_LIKE
     return HttpResponse (respuesta)
 
 @csrf_exempt

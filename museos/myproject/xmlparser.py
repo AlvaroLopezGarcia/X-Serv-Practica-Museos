@@ -35,8 +35,10 @@ class myContentHandler(ContentHandler):
 
 
     def startElement (self, name, attrs):
+#        print("Entro a startElement")
         if name == 'atributos':
             self.inItem = True
+#            print("He encontrado un atributo")
         elif self.inItem:
             if name == 'atributo':
                 if attrs['nombre'] == 'NOMBRE':
@@ -58,6 +60,7 @@ class myContentHandler(ContentHandler):
                     self.inContent = True
                     self.inEmail = True
                 elif attrs['nombre'] == 'FAX':
+ #                   print("He encontrado FAX")
                     self.inContent = True
                     self.inFax = True
                 elif attrs['nombre'] == 'TELEFONO':
@@ -77,6 +80,8 @@ class myContentHandler(ContentHandler):
                             accesibilidad=self.atributos['Accesibilidad'])
             museo.save()
             self.inItem = False
+            for atributo in self.atributos.keys():
+                self.atributos[atributo]= ""
 
         elif self.inItem:
             if name == 'atributo':
@@ -110,7 +115,8 @@ class myContentHandler(ContentHandler):
                     self.inEmail = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inFax: 
+                if self.inFax:
+                    #print("Actualizo Fax: " + self.theContent)
                     self.atributos['Fax']= self.theContent
                     self.inFax = False
                     self.theContent = ""
