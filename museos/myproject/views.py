@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login
 from operator import itemgetter
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
@@ -30,6 +32,7 @@ FORMULARIO_COMENTARIO = """
     Comentario:<br>
     <input type="text" name="comentario" placeholder= "comenta"><br>
     <input type="submit" value="Enviar">
+    <input type= 'hidden' name='opcion' value='1'>
 </form>
 """
 
@@ -49,7 +52,6 @@ FORMULARIO_USUARIO = """
 </form>
 """
 
-#museos = {}
 
 def update(request):
     Museo.objects.all().delete()
@@ -120,13 +122,27 @@ def add_seleccion(request):
             seleccion = Seleccion(museo=museo, usuario=usuario)
             seleccion.save()
 
+
+def selecciona_favorito(usuario, museo):
+    seleccionados = Seleccion.objects.all()
+    existe = False
+    
+    for seleccionado in seleccionados:
+        if str(seleccionado.museo.nombre) == str(museo):
+            existe = True
+            FORMULARIO_LIKE =""
+            break
+    if not existe:
+        FORMULARIO_LIKE = "<form action='/museos/" + str(museo.id) + "' Method='POST'><input type='submit' value='Like'><input type= 'hidden' name='usuario' value= " + usuario + "><input type= 'hidden' name='opcion' value='2'></form>"
+
+    return FORMULARIO_LIKE
+
 @csrf_exempt
 def museos(request):
     lista = {}
     existe = False
     museos = Museo.objects.all()
     FORMULARIO_DISTRITO = '<form action= "" Method= "POST"><p>Opciones:<select name="opcion">'
-    FORMULARIO_LIKE = '<form action= "" Method= "GET"><p>Me gusta: <select name="like">'
     for museo in museos:
         lista[museo.distrito]= 0
 
@@ -140,30 +156,35 @@ def museos(request):
         opcion= request.POST['opcion']
         for museo in museos:
             if museo.distrito==opcion:
-                respuesta += '<li><a href= "' + museo.enlace +'">' + museo.nombre + "</a></ul><ul>"
-                FORMULARIO_LIKE+="<option>"+ museo.nombre + "</option>"
+                respuesta += "<li><a href= /museos/" + str(museo.id)+">" + museo.nombre + "</a></ul><ul>"
     else:
         for museo in museos:
-            respuesta += '<li><a href= "' + museo.enlace +'">' + museo.nombre + "</a></ul><ul>"
-            FORMULARIO_LIKE+="<option>"+ museo.nombre + "</option>"
+            respuesta += "<li><a href= /museos/" + str(museo.id)+">" + museo.nombre + "</a></ul><ul>"
 
-    FORMULARIO_LIKE+='</select></p><p><input type="submit" value="Enviar datos"></p></form>'
     respuesta = FORMULARIO_DISTRITO + respuesta
-    add_seleccion(request)   
-    respuesta += FORMULARIO_LIKE
+    add_seleccion(request)
+    logueo = Login_info(request)
+    respuesta = logueo + "</br>" + respuesta
     return HttpResponse (respuesta)
 
 @csrf_exempt
 def museo(request,numero):
     if request.method == "POST":
-        comentario = Comentario(texto=request.POST['comentario'], museo=Museo.objects.get(id=int(numero)), usuario=Usuario.objects.get(nombre=request.user))
-        comentario.save()
+         opcion= request.POST['opcion']
+         if opcion == "1":
+             comentario = Comentario(texto=request.POST['comentario'], museo=Museo.objects.get(id=int(numero)), usuario=Usuario.objects.get(nombre=request.user))
+             comentario.save()
+             comentario.save()
+         elif opcion == "2":
+             seleccionado = Seleccion(museo = Museo.objects.get(id=numero), usuario = Usuario.objects.get(nombre = request.user))
+             seleccionado.save()
+
     museo = Museo.objects.get(id=numero)
     respuesta = "Nombre: " + museo.nombre + "</br>"
     respuesta += "Distrito: " + museo.distrito+ "</br>"
     respuesta += "Barrio: " + museo.barrio+ "</br>"
     respuesta += "Descripcion: " + museo.descripcion+ "</br>"
-    respuesta += "Enlace: " + museo.enlace+ "</br>"
+    respuesta += "Enlace: " + "<a href= " + museo.enlace + ">" + museo.enlace + "</a></br>"
     respuesta += "Email: " + museo.email+ "</br>"
     respuesta += "Fax: " + museo.fax+ "</br>"
     respuesta += "Telefono: " + museo.telefono+ "</br>"
@@ -174,9 +195,12 @@ def museo(request,numero):
         respuesta += "<ul><li>Usuario: " + str(comentario.usuario)+ " Fecha: " + str(comentario.fecha)
         respuesta += '<li type= "circle">' + comentario.texto + "</ul>"
 
+
     if request.user.is_authenticated():
         respuesta += FORMULARIO_COMENTARIO
-
+        respuesta += selecciona_favorito(str(request.user), museo)
+    logueo = Login_info(request)
+    respuesta = logueo + "</br>" + respuesta
     return HttpResponse (respuesta)
 
 def listar_museos(page,seleccionados,numero,usuario):
@@ -198,6 +222,7 @@ def listar_museos(page,seleccionados,numero,usuario):
                 break
             respuesta += '<li><a href= "' + element.museo.enlace +'">' + element.museo.nombre + "</a><ul>"
             respuesta += '<li type= "circle">Barrio: ' + element.museo.barrio + '; Distrito: '+ element.museo.distrito
+            respuesta += "; Fecha: " + str(element.fecha)
             respuesta += '<li type= "circle"><a href= "/museos/' + str(element.museo.id) +'">' + "Más información</a></ul>"
         cont+=1
     if (int(page) > 0):
@@ -216,15 +241,13 @@ def usuario(request, numero):
 
     page = request.GET.get('page')
     respuesta += listar_museos(page,seleccionados,numero,usuario)
+    respuesta += '</ul>'
+    logueo = Login_info(request)
+    respuesta = logueo + "</br>" + respuesta
     if request.user.is_authenticated():
-        logged = 'Logged in as ' + request.user.username + '. <a href="/logout">Logout</a></br>'
         if request.user.username == str(usuario.nombre):
-            respuesta += '</ul>'+ FORMULARIO_USUARIO + logged
-        else:
-            respuesta += '</ul>'+ logged
-    else:
-        logged = 'Not logged in. <a href="/login">Login</a>'
-        respuesta += '</ul>'+ logged
+            respuesta += FORMULARIO_USUARIO
+
     if request.method == "POST":
         opcion= request.POST['opcion']
         valor = request.POST['valor']
@@ -236,7 +259,29 @@ def usuario(request, numero):
             usuario.fondocolor = valor
 
         usuario.save()
+    
     return HttpResponse (respuesta)
+
+@csrf_exempt
+def Login(request):
+    user = request.POST['user']
+    password = request.POST['password']
+    user = authenticate(username=user, password=password)
+    if user is not None:
+        login(request, user)
+    return redirect("/")
+
+def Login_info(request):
+    if request.user.is_authenticated():
+        log = "<p>Logged in as " + request.user.username
+        log += "<a href='/logout'> Logout </a></p>"
+    else:
+        log = "<form action='/login' method='post'>"
+        log += "Usuario:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <input type= 'text' name='user'><br>"
+        log += "Contraseña: <input type= 'password' name='password'>"
+        log += "<input type= 'submit' value='enviar'>"
+        log += "</form>"
+    return log
 
 @csrf_exempt
 def barra(request):
@@ -269,11 +314,7 @@ def barra(request):
     else:
         respuesta += '</ul>'+FORMULARIO_ACCESIBILIDAD
 
-    if request.user.is_authenticated():
-        logged = 'Logged in as ' + request.user.username + '. <a href="/logout">Logout</a></br>'
-        respuesta += logged
-    else:
-        logged = 'Not logged in. <a href="/login">Login</a>'
-        respuesta += logged
+    logueo = Login_info(request)
+    respuesta = logueo + "</br>" + respuesta
 
     return HttpResponse (respuesta)

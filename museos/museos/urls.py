@@ -20,9 +20,10 @@ urlpatterns = [
     url(r'^$','myproject.views.barra'),
     url(r'^museos/$','myproject.views.museos'),
     url(r'^museos/(\d+)$','myproject.views.museo'),
+#    url(r'^usuario/(\d+)/xml$','myproject.views.usuario_xml'),
     url(r'^usuario/(\d+)$','myproject.views.usuario'),
     url(r'^update/$','myproject.views.update'),
-    url(r'^logout', logout),
-    url(r'^login', login),
+    url(r'^logout', logout, {'next_page': '/'}),
+    url(r'^login', 'myproject.views.Login'),
     url(r'^admin/', include(admin.site.urls)),
 ]

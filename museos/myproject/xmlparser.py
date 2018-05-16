@@ -35,10 +35,8 @@ class myContentHandler(ContentHandler):
 
 
     def startElement (self, name, attrs):
-#        print("Entro a startElement")
         if name == 'atributos':
             self.inItem = True
-#            print("He encontrado un atributo")
         elif self.inItem:
             if name == 'atributo':
                 if attrs['nombre'] == 'NOMBRE':
@@ -60,7 +58,6 @@ class myContentHandler(ContentHandler):
                     self.inContent = True
                     self.inEmail = True
                 elif attrs['nombre'] == 'FAX':
- #                   print("He encontrado FAX")
                     self.inContent = True
                     self.inFax = True
                 elif attrs['nombre'] == 'TELEFONO':
