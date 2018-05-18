@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login
 from operator import itemgetter
+from django.template.loader import get_template
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 from .models import Museo
@@ -11,6 +12,7 @@ from .models import Usuario
 from .models import Seleccion
 from xml.sax import make_parser
 from .xmlparser import myContentHandler
+from django.template import Context
 import operator
 
 FORMULARIO = """
@@ -126,7 +128,7 @@ def add_seleccion(request):
 def selecciona_favorito(usuario, museo):
     seleccionados = Seleccion.objects.all()
     existe = False
-    
+
     for seleccionado in seleccionados:
         if str(seleccionado.museo.nombre) == str(museo):
             existe = True
@@ -259,7 +261,7 @@ def usuario(request, numero):
             usuario.fondocolor = valor
 
         usuario.save()
-    
+
     return HttpResponse (respuesta)
 
 @csrf_exempt
@@ -316,5 +318,35 @@ def barra(request):
 
     logueo = Login_info(request)
     respuesta = logueo + "</br>" + respuesta
+    template = get_template('snowglass/index.html');
+    c = Context({'contenido':respuesta})
+    return HttpResponse (template.render(c))
 
-    return HttpResponse (respuesta)
+# http://www.forosdelweb.com/f14/como-utilizar-simbolo-xml-sin-morir-intento-686694/
+# He usado esta url para evitar que me diera error en el xml con el caracter &
+def usuario_xml(request, numero):
+    respuesta= """<?xml version="1.0" encoding="utf-8"?>"""
+    respuesta += """\n\n<Contenidos>\n"""
+    seleccionados = Seleccion.objects.filter(usuario_id=numero)
+    try:
+        usuario = Usuario.objects.get(id=str(numero))
+    except Usuario.DoesNotExist:
+        return HttpResponseNotFound('<h1>' + numero + ' not found</h1>')
+
+    for seleccionado in seleccionados:
+        respuesta += """\t<contenido>\n"""
+        respuesta += """\t\t<atributo nombre="NOMBRE">""" + seleccionado.museo.nombre + """</atributo>\n"""
+        respuesta += """\t\t<atributo nombre="DESCRIPCION"><![CDATA[""" + seleccionado.museo.descripcion + """]]></atributo>\n"""
+        respuesta += """\t\t<atributo nombre="ACCESIBILIDAD">""" + seleccionado.museo.accesibilidad + """</atributo>\n"""
+        respuesta += """\t\t<atributo nombre="CONTENT-URL"><![CDATA[""" + seleccionado.museo.enlace + """]]></atributo>\n"""
+        respuesta += """\t\t<atributo nombre="BARRIO">""" + seleccionado.museo.barrio + """</atributo>\n"""
+        respuesta += """\t\t<atributo nombre="DISTRITO">""" + seleccionado.museo.distrito + """</atributo>\n"""
+        print("'" +seleccionado.museo.telefono+"'")
+        respuesta += """\t\t<atributo nombre="TELEFONO">""" + seleccionado.museo.telefono + """</atributo>\n"""
+        respuesta += """\t\t<atributo nombre="FAX">""" + seleccionado.museo.fax + """</atributo>\n"""
+        respuesta += """\t\t<atributo nombre="EMAIL">""" + seleccionado.museo.email + """</atributo>\n"""
+        respuesta += """\t</contenido>\n"""
+
+    respuesta += """</Contenidos>"""
+    return HttpResponse (respuesta,content_type = 'text/xml')
+# https://www.freewebtemplates.com/download/free-website-template/snowglass-989914479/demo/

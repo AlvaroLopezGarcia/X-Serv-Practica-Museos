@@ -15,12 +15,13 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.contrib.auth.views import logout, login
+from django.views.static import serve
 
 urlpatterns = [
     url(r'^$','myproject.views.barra'),
     url(r'^museos/$','myproject.views.museos'),
     url(r'^museos/(\d+)$','myproject.views.museo'),
-#    url(r'^usuario/(\d+)/xml$','myproject.views.usuario_xml'),
+    url(r'^usuario/(\d+)/xml$','myproject.views.usuario_xml'),
     url(r'^usuario/(\d+)$','myproject.views.usuario'),
     url(r'^update/$','myproject.views.update'),
     url(r'^logout', logout, {'next_page': '/'}),
