@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<title>Basic 90</title>
+<meta charset="iso-8859-1">
+<link rel="stylesheet" href="/static/styles/layout.css" type="text/css">
+</head>
+<body>
+<div class="wrapper row1">
+  <header id="header" class="clear">
+    <div id="hgroup">
+      <a href="/"><img src="/static/images/museo.jpeg" alt=""></a> 
+    </div>
+    {{formulario_logueo|safe}}
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="museos/">Museos</a></li>
+      </ul>
+    </nav>
+  </header>
+</div>
+<!-- content -->
+<div class="wrapper row2">
+  <div id="container" class="clear">
+    <!-- Slider -->
+    <!-- main content -->
+    <div id="intro">
+      <section class="clear">
+        <!-- article 1 -->
+        <article class="two_quarter">
+          {{contenido|safe }}
+        </article>
+
+        <!-- article 2 -->
+        <article class="one_quarter">
+            {{lista_usuarios|safe}}
+        </article>
+      </section>
+    </div>
+    <!-- ########################################################################################## -->
+    <!-- ########################################################################################## -->
+    <!-- ########################################################################################## -->
+    <!-- ########################################################################################## -->
+    
+    <!-- / content body -->
+  </div>
+</div>
+<!-- Footer -->
+<div class="wrapper row3">
+  <footer id="footer" class="clear">
+    <p class="fl_left">Esta aplicación utiliza datos del portal de datos abiertos de la ciudad de Madrid</p>
+    <p class="fl_right"><a href="/about/">More about</a></p>
+  </footer>
+</div>
+</body>
+</html>

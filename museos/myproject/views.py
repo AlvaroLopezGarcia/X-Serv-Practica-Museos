@@ -15,6 +15,7 @@ from .xmlparser import myContentHandler
 from django.template import Context
 import operator
 
+
 FORMULARIO = """
     <form action= "/" Method= "GET">
     Filtrar:<br>
@@ -166,8 +167,9 @@ def museos(request):
     respuesta = FORMULARIO_DISTRITO + respuesta
     add_seleccion(request)
     logueo = Login_info(request)
-    respuesta = logueo + "</br>" + respuesta
-    return HttpResponse (respuesta)
+    template = get_template('basic/index.html');
+    c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
+    return HttpResponse (template.render(c))
 
 @csrf_exempt
 def museo(request,numero):
@@ -202,7 +204,9 @@ def museo(request,numero):
         respuesta += FORMULARIO_COMENTARIO
         respuesta += selecciona_favorito(str(request.user), museo)
     logueo = Login_info(request)
-    respuesta = logueo + "</br>" + respuesta
+    template = get_template('basic/index.html');
+    c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
+    return HttpResponse (template.render(c))
     return HttpResponse (respuesta)
 
 def listar_museos(page,seleccionados,numero,usuario):
@@ -245,7 +249,6 @@ def usuario(request, numero):
     respuesta += listar_museos(page,seleccionados,numero,usuario)
     respuesta += '</ul>'
     logueo = Login_info(request)
-    respuesta = logueo + "</br>" + respuesta
     if request.user.is_authenticated():
         if request.user.username == str(usuario.nombre):
             respuesta += FORMULARIO_USUARIO
@@ -261,8 +264,9 @@ def usuario(request, numero):
             usuario.fondocolor = valor
 
         usuario.save()
-
-    return HttpResponse (respuesta)
+    template = get_template('basic/index.html');
+    c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
+    return HttpResponse (template.render(c))
 
 @csrf_exempt
 def Login(request):
@@ -301,14 +305,11 @@ def barra(request):
     else:
         respuesta += cargar_comentados(lista_comentados)
     respuesta += "</ul>"
-#    print (lista_comentados)
-    respuesta += '</br></br></br></br></br>'
+    lista_usuarios= "Usuarios:</br>"
     for usuario in usuarios:
-        respuesta += '<ul><li type= "circle">Usuario: ' + str(usuario.nombre) +". Título: "
-        if str(usuario.titulo)!= "":
-            respuesta += '<a href= "/usuario/' + str(usuario.id) +'">' + str(usuario.titulo)+"</a></ul>"
-        else:
-            respuesta += '<a href= "/usuario/' + str(usuario.id) +'">'+"Página de "+str(usuario.nombre)+"</a></ul>"
+        lista_usuarios += '<ul><li type= "circle">Usuario: ' + str(usuario.nombre) +". Título: "
+        lista_usuarios += '<a href= "/usuario/' + str(usuario.id) +'">' + str(usuario.titulo)+"</a></ul>"
+        
 #Te falta configurar lo del titulo
 
     if request.method == "POST":
@@ -317,9 +318,8 @@ def barra(request):
         respuesta += '</ul>'+FORMULARIO_ACCESIBILIDAD
 
     logueo = Login_info(request)
-    respuesta = logueo + "</br>" + respuesta
-    template = get_template('snowglass/index.html');
-    c = Context({'contenido':respuesta})
+    template = get_template('basic/index.html');
+    c = Context({'contenido':respuesta, 'lista_usuarios':lista_usuarios, 'formulario_logueo':logueo})
     return HttpResponse (template.render(c))
 
 # http://www.forosdelweb.com/f14/como-utilizar-simbolo-xml-sin-morir-intento-686694/
@@ -349,4 +349,12 @@ def usuario_xml(request, numero):
 
     respuesta += """</Contenidos>"""
     return HttpResponse (respuesta,content_type = 'text/xml')
-# https://www.freewebtemplates.com/download/free-website-template/snowglass-989914479/demo/
+
+def about(request):
+    logueo = Login_info(request)
+    respuesta= "Esta página es una servidor web que permite buscar información sobre los museos de la comunidad de Madrid. En caso de ser usuario, tiene a su disposición una serie de recursos como comentar o dar un 'me gusta' a los museos."
+    template = get_template('basic/index.html');
+    c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
+    return HttpResponse (template.render(c)) 
+
+
