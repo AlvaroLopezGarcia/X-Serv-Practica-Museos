@@ -67,7 +67,7 @@ class myContentHandler(ContentHandler):
                     self.inContent = True
                     self.inAccesibilidad = True
 
-            
+
     def endElement (self, name):
         if name == 'atributos':
             museo = Museo(nombre=self.atributos['Nombre'], barrio=self.atributos['Barrio'],
@@ -87,43 +87,42 @@ class myContentHandler(ContentHandler):
                     self.inNombre = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inBarrio: 
+                if self.inBarrio:
                     self.atributos['Barrio']= self.theContent
                     self.inBarrio = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inDistrito: 
+                if self.inDistrito:
                     self.atributos['Distrito']= self.theContent
                     self.inDistrito = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inDescripcion: 
+                if self.inDescripcion:
                     self.atributos['Descripcion']= self.theContent
                     self.inDescripcion = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inEnlace: 
+                if self.inEnlace:
                     self.atributos['Enlace']= self.theContent
                     self.inEnlace = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inEmail: 
+                if self.inEmail:
                     self.atributos['Email']= self.theContent
                     self.inEmail = False
                     self.theContent = ""
                     self.inContent = False
                 if self.inFax:
-                    #print("Actualizo Fax: " + self.theContent)
                     self.atributos['Fax']= self.theContent
                     self.inFax = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inTelefono: 
+                if self.inTelefono:
                     self.atributos['Telefono']= self.theContent
                     self.inTelefono = False
                     self.theContent = ""
                     self.inContent = False
-                if self.inAccesibilidad: 
+                if self.inAccesibilidad:
                     self.atributos['Accesibilidad']= self.theContent
                     self.inAccesibilidad = False
                     self.theContent = ""
@@ -132,6 +131,6 @@ class myContentHandler(ContentHandler):
     def characters (self, chars):
         if self.inContent:
             self.theContent = self.theContent + chars
-            
+
 
 print ("Parse complete")
