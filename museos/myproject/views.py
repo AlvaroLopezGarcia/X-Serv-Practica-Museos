@@ -113,7 +113,7 @@ def cargar_comentados(lista_comentados):
                 break
             cont+=1
         else:
-            break;
+            break
     return respuesta
 
 def add_seleccion(request):
@@ -167,7 +167,7 @@ def museos(request):
     respuesta = FORMULARIO_DISTRITO + respuesta
     add_seleccion(request)
     logueo = Login_info(request)
-    template = get_template('basic/index.html');
+    template = get_template('basic/index.html')
     c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
     return HttpResponse (template.render(c))
 
@@ -204,7 +204,7 @@ def museo(request,numero):
         respuesta += FORMULARIO_COMENTARIO
         respuesta += selecciona_favorito(str(request.user), museo)
     logueo = Login_info(request)
-    template = get_template('basic/index.html');
+    template = get_template('basic/index.html')
     c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
     return HttpResponse (template.render(c))
     return HttpResponse (respuesta)
@@ -257,14 +257,17 @@ def usuario(request, numero):
         opcion= request.POST['opcion']
         valor = request.POST['valor']
         if opcion == 'Titulo':
-            usuario.titulo = valor
+            if valor != "":
+                usuario.titulo = valor
+            else:
+                usuario.titulo = "Página de " + str(request.user)
         elif opcion == 'Tamaño':
             usuario.tamaño = valor
         elif opcion == 'Fondo Color':
             usuario.fondocolor = valor
 
         usuario.save()
-    template = get_template('basic/index.html');
+    template = get_template('basic/index.html')
     c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
     return HttpResponse (template.render(c))
 
@@ -309,8 +312,6 @@ def barra(request):
     for usuario in usuarios:
         lista_usuarios += '<ul><li type= "circle">Usuario: ' + str(usuario.nombre) +". Título: "
         lista_usuarios += '<a href= "/usuario/' + str(usuario.id) +'">' + str(usuario.titulo)+"</a></ul>"
-        
-#Te falta configurar lo del titulo
 
     if request.method == "POST":
         respuesta += '</ul>'+FORMULARIO
@@ -318,7 +319,7 @@ def barra(request):
         respuesta += '</ul>'+FORMULARIO_ACCESIBILIDAD
 
     logueo = Login_info(request)
-    template = get_template('basic/index.html');
+    template = get_template('basic/index.html')
     c = Context({'contenido':respuesta, 'lista_usuarios':lista_usuarios, 'formulario_logueo':logueo})
     return HttpResponse (template.render(c))
 
@@ -328,11 +329,6 @@ def usuario_xml(request, numero):
     respuesta= """<?xml version="1.0" encoding="utf-8"?>"""
     respuesta += """\n\n<Contenidos>\n"""
     seleccionados = Seleccion.objects.filter(usuario_id=numero)
-    try:
-        usuario = Usuario.objects.get(id=str(numero))
-    except Usuario.DoesNotExist:
-        return HttpResponseNotFound('<h1>' + numero + ' not found</h1>')
-
     for seleccionado in seleccionados:
         respuesta += """\t<contenido>\n"""
         respuesta += """\t\t<atributo nombre="NOMBRE">""" + seleccionado.museo.nombre + """</atributo>\n"""
@@ -341,7 +337,6 @@ def usuario_xml(request, numero):
         respuesta += """\t\t<atributo nombre="CONTENT-URL"><![CDATA[""" + seleccionado.museo.enlace + """]]></atributo>\n"""
         respuesta += """\t\t<atributo nombre="BARRIO">""" + seleccionado.museo.barrio + """</atributo>\n"""
         respuesta += """\t\t<atributo nombre="DISTRITO">""" + seleccionado.museo.distrito + """</atributo>\n"""
-        print("'" +seleccionado.museo.telefono+"'")
         respuesta += """\t\t<atributo nombre="TELEFONO">""" + seleccionado.museo.telefono + """</atributo>\n"""
         respuesta += """\t\t<atributo nombre="FAX">""" + seleccionado.museo.fax + """</atributo>\n"""
         respuesta += """\t\t<atributo nombre="EMAIL">""" + seleccionado.museo.email + """</atributo>\n"""
@@ -353,8 +348,20 @@ def usuario_xml(request, numero):
 def about(request):
     logueo = Login_info(request)
     respuesta= "Esta página es una servidor web que permite buscar información sobre los museos de la comunidad de Madrid. En caso de ser usuario, tiene a su disposición una serie de recursos como comentar o dar un 'me gusta' a los museos."
-    template = get_template('basic/index.html');
+    template = get_template('basic/index.html')
     c = Context({'contenido':respuesta, 'formulario_logueo':logueo})
-    return HttpResponse (template.render(c)) 
+    return HttpResponse (template.render(c))
 
-
+def css(request):
+    if request.user.is_authenticated():
+        print("Estoy authenticado")
+        fondocolor = Usuario.objects.get(nombre=request.user).fondocolor
+        print(fondocolor)
+        letra = Usuario.objects.get(nombre=request.user).tamaño
+    else:
+        print("No estoy authenticado")
+        fondocolor="white"
+        letra="13"
+    template = get_template('basic/styles/layout.css')
+    c = Context({'color':fondocolor,'letra':letra})
+    return HttpResponse (template.render(c),content_type="text/css")

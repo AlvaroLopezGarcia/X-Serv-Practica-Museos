@@ -19,7 +19,6 @@ class Museo(models.Model):
 class Usuario(models.Model):
     nombre = models.OneToOneField(User)
     titulo = models.CharField(max_length=256)
-    letracolor = models.CharField(max_length=256)
     tamaño = models.CharField(max_length=256)
     fondocolor = models.CharField(max_length=256)
     def __str__(self):

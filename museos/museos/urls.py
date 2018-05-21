@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^museos/(\d+)$','myproject.views.museo'),
     url(r'^usuario/(\d+)/xml$','myproject.views.usuario_xml'),
     url(r'^usuario/(\d+)$','myproject.views.usuario'),
+    url(r'^css$','myproject.views.css'),
     url(r'^static(.+)$',serve,{'document_root':'templates/basic'}),
     url(r'^update/$','myproject.views.update'),
     url(r'^logout', logout, {'next_page': '/'}),
